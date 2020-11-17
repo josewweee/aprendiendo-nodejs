@@ -1,5 +1,9 @@
 extends layout
 
+include mixins/_reviewForm
+include mixins/_review
+
+
 block content
   .single 
     .single__hero
@@ -18,3 +22,12 @@ block content
             a.tag__link(href=`/tags/${tag}`)
               //- el doble ## es para mostrar un # en la ui
               span.tag__text ##{tag}
+    
+    if user
+      +reviewForm(store)
+
+    if store.reviews
+      .reviews
+        each r in store.reviews
+          .review
+            +review(r)

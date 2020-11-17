@@ -40,7 +40,9 @@ const storeSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: 'Debes de dar un author',
-  },
+  } /* , 
+    toJSON: { virtuals: true},
+    toObject: { virtual: true} */, // Para ver los virtuals en json
 });
 
 //Definimos el index, para optimizar queries
@@ -69,7 +71,7 @@ storeSchema.pre('save', async function (next) {
   next();
 });
 // usamos function y no arrow function, para poder usar this (que en este caso es el store)
-// statics es como prototype
+// statics es como prototype, para hacer agregations, ( querys complejos de varias lineas )
 storeSchema.statics.getTagsList = function () {
   // creamos un query de pipelines en mongo, eso toca estudiarlo, tiene cosas muy locas
   return this.aggregate([
@@ -78,6 +80,55 @@ storeSchema.statics.getTagsList = function () {
     { $sort: { count: -1 } },
   ]);
 };
+
+storeSchema.statics.getTopStoresSchema = function () {
+  return this.aggregate([
+    // Miramos stores y populamos sus reviews
+    {
+      // casi como un virtual, creamos una nueva propiedad
+      $lookup: {
+        from: 'reviews', // desde el modelo Review -> mongo le pone una s y todo en minus
+        localField: '_id', // la propiedad que hara match con
+        foreignField: 'store', // esta propiedad del modelo remoto
+        as: 'reviews', // crearemos una nueva propiedad con este nombre
+      },
+    },
+    // filtamos solo las que tengan 2 o mas reviews
+    // ese reviews.1 es como reviews[1]
+    { $match: { 'reviews.1': { $exists: true } } },
+    // agregamos una propiedad (project) con el promedio de reviews
+    {
+      $project: {
+        photo: '$$ROOT.photo',
+        name: '$$ROOT.name',
+        reviews: '$$ROOT.reviews',
+        slug: '$$ROOT.slug',
+        averageRating: { $avg: '$reviews.rating' },
+      },
+    },
+    // sort basado en ratings de mayor a menor
+    { $sort: { averageRating: -1 } },
+    // limit to at most 10
+    { $limit: 10 },
+  ]);
+};
+
+// Traemos todos los items de reviews que hagan match del localField y el foreignField,
+// virtual para que no guardmeos ninguna relacion, es virtual, solo pal momento, y no salen
+// si nos los llamamos directamente store.reviews, ni salen en agregations
+storeSchema.virtual('reviews', {
+  ref: 'Review', // shcema remoto
+  localField: '_id', // match de la propiedad _id en este schema
+  foreignField: 'store', // match de la pripiedad store en el schema de Review
+});
+
+function autopopulate(next) {
+  this.populate('reviews');
+  next();
+}
+
+storeSchema.pre('find', autopopulate);
+storeSchema.pre('findOne', autopopulate);
 
 //- exportamos el modelo
 module.exports = mongoose.model('Store', storeSchema);

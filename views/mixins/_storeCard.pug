@@ -15,6 +15,10 @@ mixin storeCard(store = {})
             a(href=`/stores/${store._id}/edit`)
               //- != es para decir que vamos a poner codigo html
               != h.icon('pencil')
+        if store.reviews
+          .store__action.store__action--count
+          != h.icon('review')
+          span= store.reviews.length
       img(src=`/uploads/${store.photo || 'store.png'}`)
       h2.title
         a(href=`/store/${store.slug}`) #{store.name}

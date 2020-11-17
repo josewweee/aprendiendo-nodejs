@@ -79,9 +79,29 @@ exports.createStore = async (req, res) => {
 };
 
 exports.getStores = async (req, res) => {
+  const page = req.params.page || 1;
+  const limit = 4;
+  const skip = page * limit - limit;
   //asi podemos traer datos del db
-  const stores = await Store.find();
-  res.render('stores', { title: 'Stores', stores });
+  const storesPromise = Store.find()
+    .skip(skip)
+    .limit(limit)
+    .sort({ created: 'desc' });
+
+  // Contamos la cantidad de items en este Schema del db
+  const countPromise = Store.count();
+  // esepramos ambas promesas
+  const [stores, count] = await Promise.all([storesPromise, countPromise]);
+  const pages = Math.ceil(count / limit);
+  if (!stores.length && skip) {
+    req.flash(
+      'info',
+      `Hey, pediste la pagina ${page}, pero eso no existe, entonces
+    te pusimos en la pagina ${pages}`
+    );
+    res.redirect(`/stores/page/${pages}`);
+  }
+  res.render('stores', { title: 'Stores', stores, page, pages, count });
 };
 
 const confirmOwner = (store, user) => {
@@ -122,9 +142,11 @@ exports.updateStore = async (req, res) => {
 
 exports.getStoreBySlug = async (req, res, next) => {
   //res.json(req.params) FUNCION UTIL PA VER DATOS EN LA PANTALLA
+
+  // el populate, toma el ObjectId en author y busca y pega en author los datos que vienen cone se ID
   const store = await Store.findOne({ slug: req.params.slug }).populate(
-    'author'
-  ); // el populate, toma el ObjectId en author y busca y pega en author los datos que vienen cone se ID
+    'author reviews'
+  );
   if (!store) {
     // podemos usar next para actuar como un middleWare, y solo seguir a la proxima pantalla, ( errores/404/etc.. )
     return next();
@@ -213,4 +235,9 @@ exports.getHearts = async (req, res) => {
     _id: { $in: req.user.hearts },
   });
   res.render('stores', { title: 'Hearted Stores', stores });
+};
+
+exports.getTopStores = async (req, res) => {
+  const stores = await Store.getTopStoresSchema();
+  res.render('topStores', { stores, title: '⭐ Top Stores!' });
 };

@@ -1,5 +1,6 @@
 extends layout
 include mixins/_storeCard
+include mixins/_pagination
 
 block content
   //- contenido con un punto antes, es un div
@@ -9,3 +10,4 @@ block content
     .stores
       each store in stores
         +storeCard(store)
+    +pagination(page, pages, count)
