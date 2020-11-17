@@ -1,0 +1,12 @@
+extends layout
+
+include mixins/_storeForm
+
+//- podemos tomar los datos que enviamos por parametros solo poniendo el nombre
+//- ese block content nos sirve para traer el block del export de layout de arriba
+//- el +function es el mixing, se tiene que poner con esa sintax
+//- el h2= title es lo mismo que decir h2 #{title}
+block content
+  .inner
+    h2= title
+    +storeForm(store)

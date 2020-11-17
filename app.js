@@ -12,6 +12,7 @@ const expressValidator = require('express-validator');
 const routes = require('./routes/index');
 const helpers = require('./helpers');
 const errorHandlers = require('./handlers/errorHandlers');
+require('./handlers/passport');
 
 // create our Express app
 const app = express();
@@ -52,10 +53,12 @@ app.use(passport.session());
 // // The flash middleware let's us use req.flash('error', 'Shit!'), which will then pass that message to the next page the user requests
 app.use(flash());
 
-// pass variables to our templates + all requests
+// pass variables to our templates + all requests ( PARAMOS VARIABLES A LOS TEMPLATES )
 app.use((req, res, next) => {
+  //Este helpers son varios exports de un js que tendremos como H en todos nuestros otros archivos.
   res.locals.h = helpers;
   res.locals.flashes = req.flash();
+  // si estamos loggeados, le mandamos el user, si no, mandamos null
   res.locals.user = req.user || null;
   res.locals.currentPath = req.path;
   next();

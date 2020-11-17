@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  div
+    p.class.another-class hello! my dog name is #{dog}, im #{name}
+    .wrapper 
+      - const jsVariable = dog.toUpperCase();
+      p #{jsVariable} - podemos tener variables en js creadas aqui
+      span#this-is-an-id yoo
+      img.img-class(src="dog.jpg" alt=`${Dog}`)
+      h2
+      | holis
+      em  - ese pipe nos conecta la linea de arriba con esta

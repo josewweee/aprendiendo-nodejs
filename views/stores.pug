@@ -1,0 +1,11 @@
+extends layout
+include mixins/_storeCard
+
+block content
+  //- contenido con un punto antes, es un div
+  .inner
+    //- h2= es una interpolacion
+    h2= title
+    .stores
+      each store in stores
+        +storeCard(store)

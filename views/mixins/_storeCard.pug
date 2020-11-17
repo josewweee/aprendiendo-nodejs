@@ -1,0 +1,23 @@
+mixin storeCard(store = {})
+  .store
+    .store__hero
+      .store__actions
+        if user
+          .store__action.store__action--heart
+            form.heart(method='POST' action=`/api/stores/${store._id}/heart`)
+              - const heartStrings = user.hearts.map(obj => obj.toString())
+              - const heartClass = heartStrings.includes(store._id.toString()) ? 'heart__button--hearted' : ''
+              button.heart__button(type='submit' name='heart' class=heartClass)
+                != h.icon('heart')
+        if user && store.author.equals(user._id)
+          .store__action.store__action--edit
+            //- _id es el id que mongo da por default
+            a(href=`/stores/${store._id}/edit`)
+              //- != es para decir que vamos a poner codigo html
+              != h.icon('pencil')
+      img(src=`/uploads/${store.photo || 'store.png'}`)
+      h2.title
+        a(href=`/store/${store.slug}`) #{store.name}
+    .store_details
+      //-de string a array por espacios, tomamos los primeros 25 y volvemos a string
+      p= store.description.split(' ').slice(0,25).join(' ')
